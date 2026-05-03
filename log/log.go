@@ -64,9 +64,6 @@ func GetLogStyles() *log.Styles {
 
 func InitLogger() {
 	log.SetDefault(log.NewWithOptions(os.Stderr, GetLogOptions()))
-	// TODO: idk why this was a problem
-	if environment.IS_DEV {
-		GetLogger().SetStyles(GetLogStyles())
-	}
+	GetLogger().SetStyles(GetLogStyles())
 	slog.SetDefault(slog.New(GetLogger()))
 }

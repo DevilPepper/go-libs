@@ -12,14 +12,6 @@ import (
 )
 
 func NewServer(enableSwagger bool, port int, withInfo func(e *fuego.Engine), serverOptions ...func(*fuego.Server)) *fuego.Server {
-	host := ""
-	if environment.IS_DEV {
-		host = environment.GetBaseUrl()
-		if host == "" {
-			host = "localhost"
-		}
-	}
-
 	opts := append(
 		[]func(*fuego.Server){
 			fuego.WithEngineOptions(
@@ -45,7 +37,7 @@ func NewServer(enableSwagger bool, port int, withInfo func(e *fuego.Engine), ser
 				DisableRequest:  environment.IS_DEV,
 				DisableResponse: environment.IS_DEV,
 			}),
-			fuego.WithAddr(fmt.Sprintf("%s:%d", host, port)),
+			fuego.WithAddr(fmt.Sprintf("%s:%d", environment.GetDomain(), port)),
 		},
 		serverOptions...,
 	)
