@@ -8,14 +8,15 @@ _default:
   echo '`just --choose` to select a task to run interactively'
 
 # Default target (just run `make`). Incremental builds for dev
-build:
+build *GO_BUILD_ARGS:
   #!/usr/bin/env bash
   go mod tidy
+  go build ./... {{GO_BUILD_ARGS}}
 
 # Run all tests
-test: build
+test *GO_TEST_ARGS:
   #!/usr/bin/env bash
-  go test
+  go test ./... {{GO_TEST_ARGS}}
 
 # Lint and format all files
 format:
