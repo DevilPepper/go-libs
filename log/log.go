@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/DevilPepper/go-libs/environment"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
@@ -23,10 +24,13 @@ func GetLogLevel() log.Level {
 }
 
 func GetLogOptions() log.Options {
-	// TODO: Revisit for production
 	logLevel := GetLogLevel()
+	timeFormat := time.RFC3339
+	if environment.IS_DEV {
+		timeFormat = time.TimeOnly
+	}
 	return log.Options{
-		TimeFormat:      time.TimeOnly,
+		TimeFormat:      timeFormat,
 		Level:           logLevel,
 		ReportTimestamp: true,
 		ReportCaller:    logLevel == log.DebugLevel,
@@ -60,6 +64,9 @@ func GetLogStyles() *log.Styles {
 
 func InitLogger() {
 	log.SetDefault(log.NewWithOptions(os.Stderr, GetLogOptions()))
-	GetLogger().SetStyles(GetLogStyles())
+	// TODO: idk why this was a problem
+	if environment.IS_DEV {
+		GetLogger().SetStyles(GetLogStyles())
+	}
 	slog.SetDefault(slog.New(GetLogger()))
 }

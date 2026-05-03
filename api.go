@@ -11,7 +11,15 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-func NewServer(enableSwagger bool, withInfo func(e *fuego.Engine), serverOptions ...func(*fuego.Server)) *fuego.Server {
+func NewServer(enableSwagger bool, port int, withInfo func(e *fuego.Engine), serverOptions ...func(*fuego.Server)) *fuego.Server {
+	host := ""
+	if environment.IS_DEV {
+		host = environment.GetBaseUrl()
+		if host == "" {
+			host = "localhost"
+		}
+	}
+
 	opts := append(
 		[]func(*fuego.Server){
 			fuego.WithEngineOptions(
@@ -34,9 +42,10 @@ func NewServer(enableSwagger bool, withInfo func(e *fuego.Engine), serverOptions
 				option.DefaultStatusCode(200),
 			),
 			fuego.WithLoggingMiddleware(fuego.LoggingConfig{
-				DisableRequest:  environment.IsDev(),
-				DisableResponse: environment.IsDev(),
+				DisableRequest:  environment.IS_DEV,
+				DisableResponse: environment.IS_DEV,
 			}),
+			fuego.WithAddr(fmt.Sprintf("%s:%d", host, port)),
 		},
 		serverOptions...,
 	)
@@ -44,7 +53,7 @@ func NewServer(enableSwagger bool, withInfo func(e *fuego.Engine), serverOptions
 	s := fuego.NewServer(
 		opts...,
 	)
-	if environment.IsDev() {
+	if environment.IS_DEV {
 		fuego.Use(s, middleware.RequestLogs)
 	}
 	return s

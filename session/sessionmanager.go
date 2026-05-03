@@ -24,7 +24,7 @@ func GetSessionManager() *scs.SessionManager {
 			sessionManager.Lifetime = 24 * time.Hour
 			sessionManager.IdleTimeout = 5 * time.Minute
 			sessionManager.Cookie.HttpOnly = true
-			sessionManager.Cookie.Secure = !environment.IsDev()
+			sessionManager.Cookie.Secure = !environment.IS_DEV
 			sessionManager.Cookie.SameSite = http.SameSiteStrictMode
 			sessionManager.Store = redisstore.New(redis.GetRedisPool())
 		})
