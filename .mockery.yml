@@ -1,0 +1,11 @@
+all: false
+dir: generated/mocks
+filename: mock_{{.InterfaceName}}.go
+formatter: goimports
+pkgname: mocks
+recursive: true
+packages:
+  github.com/DevilPepper/go-libs:
+    config:
+      all: true
+      template: testify
