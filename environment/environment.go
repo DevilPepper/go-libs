@@ -2,6 +2,9 @@ package environment
 
 import (
 	"os"
+	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 func GetBaseUrl() string {
@@ -17,4 +20,17 @@ func GetDomain() string {
 		return domain
 	}
 	return ""
+}
+
+func AssertVariables(required ...string) {
+	var missing []string
+	for _, variable := range required {
+		if os.Getenv(variable) == "" {
+			missing = append(missing, variable)
+		}
+	}
+
+	if len(missing) > 0 {
+		log.Fatalf("Missing environment variable: \n - %s", strings.Join(missing, "\n - "))
+	}
 }
