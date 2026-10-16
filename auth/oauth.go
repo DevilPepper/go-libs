@@ -22,7 +22,16 @@ import (
 //go:embed callback.html
 var callbackHTML string
 
-func Login(ctx context.Context, issuerURL string, clientID string, app string) error {
+func Login(ctx context.Context, issuerURL string, clientID string, app string, additionalScopes ...string) error {
+	scopes := append(
+		[]string{
+			"openid",
+			"profile",
+			"email",
+		},
+		additionalScopes...,
+	)
+
 	token, err := loadToken(app, clientID)
 	if err == nil && (token.RefreshToken != "" || token.Valid()) {
 		hasRefresh := "✅"
@@ -46,7 +55,7 @@ func Login(ctx context.Context, issuerURL string, clientID string, app string) e
 		ClientID:    clientID,
 		RedirectURL: "http://localhost:18000",
 		Endpoint:    provider.Endpoint(),
-		Scopes:      []string{"openid", "profile", "email", "offline_access"},
+		Scopes:      scopes,
 	}
 
 	listener, err := net.Listen("tcp", "127.0.0.1:18000")
