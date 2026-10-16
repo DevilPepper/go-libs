@@ -22,7 +22,7 @@ import (
 //go:embed callback.html
 var callbackHTML string
 
-func Login(ctx context.Context, issuerURL string, clientID string, app string, additionalScopes ...string) error {
+func Login(ctx context.Context, issuerURL string, clientID string, clientSecret string, app string, additionalScopes ...string) error {
 	scopes := append(
 		[]string{
 			"openid",
@@ -34,9 +34,9 @@ func Login(ctx context.Context, issuerURL string, clientID string, app string, a
 
 	token, err := loadToken(app, clientID)
 	if err == nil && (token.RefreshToken != "" || token.Valid()) {
-		hasRefresh := "✅"
+		hasRefresh := "❌"
 		if token.RefreshToken != "" {
-			hasRefresh = "❌"
+			hasRefresh = "✅"
 		}
 		log.Warn(
 			"Already logged in",
@@ -52,10 +52,11 @@ func Login(ctx context.Context, issuerURL string, clientID string, app string, a
 
 	verifier := oauth2.GenerateVerifier()
 	oauthCfg := oauth2.Config{
-		ClientID:    clientID,
-		RedirectURL: "http://localhost:18000",
-		Endpoint:    provider.Endpoint(),
-		Scopes:      scopes,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  "http://localhost:18000",
+		Endpoint:     provider.Endpoint(),
+		Scopes:       scopes,
 	}
 
 	listener, err := net.Listen("tcp", "127.0.0.1:18000")
@@ -90,7 +91,7 @@ type OIDCEndpoints struct {
 	RevocationEndpoint string `json:"revocation_endpoint"`
 }
 
-func Logout(ctx context.Context, issuerURL string, clientID string, app string) error {
+func Logout(ctx context.Context, issuerURL string, clientID string, clientSecret string, app string) error {
 	token, err := loadToken(app, clientID)
 	if err != nil {
 		return err
@@ -113,6 +114,9 @@ func Logout(ctx context.Context, issuerURL string, clientID string, app string) 
 				"token":           {token.RefreshToken},
 				"token_type_hint": {"refresh_token"},
 				"client_id":       {clientID},
+			}
+			if clientSecret != "" {
+				form.Set("client_secret", clientSecret)
 			}
 			req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.RevocationEndpoint, strings.NewReader(form.Encode()))
 			if err != nil {
@@ -152,9 +156,13 @@ func doRequest(req *http.Request) error {
 	return nil
 }
 
-func AuthClient(ctx context.Context, issuerURL string, clientID string, app string) *http.Client {
+func AuthClient(ctx context.Context, issuerURL string, clientID string, clientSecret string, app string) *http.Client {
 	provider, _ := oidc.NewProvider(ctx, issuerURL)
-	oauthCfg := oauth2.Config{ClientID: clientID, Endpoint: provider.Endpoint()}
+	oauthCfg := oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Endpoint:     provider.Endpoint(),
+	}
 	src := oauth2.ReuseTokenSource(nil, &refresher{config: oauthCfg, app: app})
 	return oauth2.NewClient(ctx, src)
 }
